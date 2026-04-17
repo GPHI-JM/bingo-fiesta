@@ -1,0 +1,324 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
+  background: #8d5a32;
+  color: #fffaf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    linear-gradient(rgba(120, 67, 16, 0.18), rgba(120, 67, 16, 0.18)),
+    url("./assets/fiesta-background.png") center top / cover no-repeat fixed;
+}
+
+.fiesta-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 250, 230, 0.08), rgba(255, 250, 230, 0.08)),
+    linear-gradient(rgba(94, 45, 11, 0.16), rgba(94, 45, 11, 0.16));
+}
+
+.fiesta-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+    radial-gradient(circle at 8% 16%, #ef4444 0 4px, transparent 5px),
+    radial-gradient(circle at 20% 10%, #facc15 0 4px, transparent 5px),
+    radial-gradient(circle at 32% 14%, #22c55e 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 12%, #38bdf8 0 4px, transparent 5px),
+    radial-gradient(circle at 82% 18%, #fb7185 0 3px, transparent 4px),
+    radial-gradient(circle at 90% 10%, #f97316 0 4px, transparent 5px);
+}
+
+.fiesta-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 28px;
+  border-radius: 32px;
+  background: linear-gradient(135deg, rgba(199, 65, 31, 0.92), rgba(245, 158, 11, 0.88));
+  border: 4px solid #ffe7a3;
+  box-shadow: 0 18px 40px rgba(79, 29, 13, 0.32);
+}
+
+.fiesta-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #fff4cc;
+}
+
+.fiesta-badge {
+  min-width: 110px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  text-align: center;
+  background: #fff8eb;
+  color: #7c2d12;
+  box-shadow: inset 0 -3px 0 rgba(217, 119, 6, 0.18);
+}
+
+.fiesta-badge-number {
+  display: block;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.fiesta-badge-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fiesta-panel {
+  background: rgba(255, 248, 235, 0.88);
+  color: #422006;
+  border: 4px solid #ffd08a;
+  box-shadow:
+    0 20px 36px rgba(74, 29, 10, 0.24),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.fiesta-panel-title {
+  margin: 0;
+  color: #7c2d12;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fiesta-machine-frame {
+  min-height: 240px;
+  aspect-ratio: 320 / 260;
+  background:
+    radial-gradient(circle at 35% 22%, rgba(255, 255, 255, 0.06), transparent 32%),
+    linear-gradient(180deg, #262626, #0a0a0a);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.fiesta-called-ball {
+  display: flex;
+  width: 33px;
+  height: 33px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #991b1b;
+  background: radial-gradient(circle at 35% 30%, #fb7185, #dc2626 70%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 2px 0 rgba(127, 29, 29, 0.45);
+}
+
+.fiesta-card {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(255, 245, 230, 0.98));
+  border: 5px solid #f59e0b;
+  box-shadow:
+    0 18px 28px rgba(120, 53, 15, 0.2),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+}
+
+.fiesta-card-cell {
+  box-shadow: inset 0 -2px 0 rgba(217, 119, 6, 0.08);
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.bingo-celebration {
+  position: absolute;
+  inset: 0;
+}
+
+.firework {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: firework-burst 2.4s ease-out infinite;
+}
+
+.firework::before,
+.firework::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 -56px 0 0 currentColor,
+    40px -40px 0 0 currentColor,
+    56px 0 0 0 currentColor,
+    40px 40px 0 0 currentColor,
+    0 56px 0 0 currentColor,
+    -40px 40px 0 0 currentColor,
+    -56px 0 0 0 currentColor,
+    -40px -40px 0 0 currentColor;
+}
+
+.firework::after {
+  box-shadow:
+    0 -36px 0 0 currentColor,
+    26px -26px 0 0 currentColor,
+    36px 0 0 0 currentColor,
+    26px 26px 0 0 currentColor,
+    0 36px 0 0 currentColor,
+    -26px 26px 0 0 currentColor,
+    -36px 0 0 0 currentColor,
+    -26px -26px 0 0 currentColor;
+  opacity: 0.8;
+}
+
+.firework-1 { left: 8%; top: 18%; color: #fb7185; animation-delay: 0s; }
+.firework-2 { left: 26%; top: 44%; color: #fbbf24; animation-delay: 0.5s; }
+.firework-3 { left: 40%; top: 24%; color: #34d399; animation-delay: 1s; }
+.firework-4 { left: 58%; top: 70%; color: #60a5fa; animation-delay: 0.25s; }
+.firework-5 { left: 74%; top: 28%; color: #c084fc; animation-delay: 1.2s; }
+.firework-6 { left: 90%; top: 76%; color: #f472b6; animation-delay: 0.8s; }
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes firework-burst {
+  0% {
+    transform: scale(0.12);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.bingo-marquee {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 3px solid #ffd08a;
+  background: linear-gradient(90deg, #c2410c, #ea580c, #f59e0b, #ea580c, #c2410c);
+  background-size: 200% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 10px 22px rgba(74, 29, 10, 0.22);
+}
+
+.bingo-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: bingo-marquee-scroll 58s linear infinite;
+}
+
+.bingo-marquee-segment {
+  flex-shrink: 0;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: clamp(1.15rem, 3.2vw, 2.35rem);
+  padding: 12px 40px 14px;
+  font-size: clamp(0.62rem, 1.55vw, 0.78rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fffbeb;
+  white-space: nowrap;
+}
+
+.bingo-marquee-chip {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+  padding-inline: 0.35rem;
+  letter-spacing: 0.24em;
+  transform-origin: center bottom;
+  text-shadow: 0 1px 0 rgba(120, 53, 15, 0.42);
+  transform: scale(1) translateY(0);
+  filter: drop-shadow(0 1px 0 rgba(120, 53, 15, 0.32));
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.45, 0.64, 1),
+    filter 0.22s ease;
+}
+
+.bingo-marquee-chip--active {
+  z-index: 2;
+  transform: scale(1.14) translateY(-3px);
+  filter:
+    drop-shadow(0 3px 0 rgba(120, 53, 15, 0.2))
+    drop-shadow(0 8px 12px rgba(0, 0, 0, 0.22));
+}
+
+@keyframes bingo-marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bingo-marquee-track {
+    animation: none;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .bingo-marquee-segment:last-child {
+    display: none;
+  }
+
+  .bingo-marquee-chip,
+  .bingo-marquee-chip--active {
+    transform: none;
+    filter: none;
+    text-shadow: 0 1px 0 rgba(120, 53, 15, 0.38);
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .fiesta-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
