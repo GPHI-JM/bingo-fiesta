@@ -1,5 +1,5 @@
 <template>
-  <aside class="game-icon-grid" aria-label="More carnival games">
+  <aside :class="['game-icon-grid', `game-icon-grid--${layout}`]" aria-label="More carnival games">
     <div class="game-icon-grid__inner">
       <button
         v-for="entry in gameEntries"
@@ -7,7 +7,7 @@
         type="button"
         class="game-icon-grid__cell"
         :class="`game-icon-grid__cell--${entry.theme}`"
-        @click="onEntryClick"
+        @click="openGame(entry)"
       >
         <span class="game-icon-grid__thumb">
           <span class="game-icon-grid__hot" aria-hidden="true">HOT</span>
@@ -20,45 +20,63 @@
             loading="lazy"
             @error="markImageFailed(entry.src)"
           />
-          <span v-else class="game-icon-grid__emoji-fallback" aria-hidden="true">{{ entry.emoji }}</span>
+          <span v-else class="game-icon-grid__emoji-fallback" aria-hidden="true">{{ entry.fallback }}</span>
         </span>
-        <span class="game-icon-grid__caption">{{ entry.alt }}</span>
+        <!-- <span class="game-icon-grid__caption">{{ entry.alt }}</span> -->
       </button>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
-import tekhenIcon from '../assets/icons/tekhen_icon.webp'
+import { computed, reactive } from 'vue'
+import bfIcon from '../assets/icons/bf_icon.png'
+import nfIcon from '../assets/icons/nf_icon.png'
+import phIcon from '../assets/icons/ph_icon.png'
+import tekhenIcon from '../assets/icons/tekhen_icon.png'
+
+const props = defineProps({
+  layout: {
+    type: String,
+    default: 'stack',
+  },
+})
 
 const imageFailed = reactive({})
+const layout = computed(() => (props.layout === 'compact' ? 'compact' : 'stack'))
 
-/**
- * Sabong / Tek-Hen tile uses `src/assets/icons/tekhen_icon.webp` (bundled by Vite).
- * Basketball + hammer PNGs live in `public/`.
- */
 const gameEntries = [
+  // {
+  //   id: 'bf',
+  //   src: bfIcon,
+  //   alt: 'bf_icon',
+  //   url: 'https://fb.gg/play/1463506198613599',
+  //   fallback: 'BF',
+  //   theme: 'cyan',
+  // },
   {
-    id: 'tekhen',
-    src: tekhenIcon,
-    alt: 'Tek-Hen',
-    emoji: '🐓',
-    theme: 'cyan',
-  },
-  {
-    id: 'basketball',
-    src: '/basketball.png',
-    alt: 'Basketball',
-    emoji: '🏀',
+    id: 'nf',
+    src: nfIcon,
+    alt: 'nf_icon',
+    url: 'https://fb.gg/play/1431508008453701',
+    fallback: 'NF',
     theme: 'green',
   },
   {
-    id: 'hammer',
-    src: '/hammer-cursor.png',
-    alt: 'Hammer',
-    emoji: '🔨',
+    id: 'ph',
+    src: phIcon,
+    alt: 'ph_icon',
+    url: 'https://fb.gg/play/4166337263499439',
+    fallback: 'PH',
     theme: 'yellow',
+  },
+  {
+    id: 'tekhen',
+    src: tekhenIcon,
+    alt: 'tekhen_icon',
+    url: null,
+    fallback: 'TK',
+    theme: 'purple',
   },
 ]
 
@@ -66,7 +84,12 @@ function markImageFailed(src) {
   imageFailed[src] = true
 }
 
-function onEntryClick() {
+function openGame(entry) {
+  if (entry.url) {
+    window.open(entry.url, '_blank', 'noopener,noreferrer')
+    return
+  }
+
   window.alert('Coming soon')
 }
 </script>
@@ -74,6 +97,10 @@ function onEntryClick() {
 <style scoped>
 .game-icon-grid {
   width: 100%;
+  max-width: none;
+}
+
+.game-icon-grid--stack {
   max-width: 118px;
 }
 
@@ -82,6 +109,12 @@ function onEntryClick() {
   flex-direction: column;
   gap: 0.55rem;
   align-items: stretch;
+}
+
+.game-icon-grid--compact .game-icon-grid__inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+  gap: 0.55rem;
 }
 
 .game-icon-grid__cell {
@@ -95,12 +128,17 @@ function onEntryClick() {
   cursor: pointer;
   border-radius: 0;
   color: #f5f5f4;
+  min-width: 0;
+}
+
+.game-icon-grid--stack .game-icon-grid__cell {
+  width: 100%;
 }
 
 .game-icon-grid__thumb {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   border-radius: 14px;
   overflow: hidden;
   background: radial-gradient(ellipse 120% 100% at 50% 20%, #262626 0%, #0a0a0a 55%, #050505 100%);
@@ -111,12 +149,12 @@ function onEntryClick() {
 
 .game-icon-grid__hot {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 4px;
+  right: 4px;
   z-index: 4;
-  padding: 2px 6px 1px;
+  padding: 2px 5px 1px;
   border-radius: 4px;
-  font-size: 0.5rem;
+  font-size: 0.44rem;
   font-weight: 900;
   letter-spacing: 0.06em;
   line-height: 1.1;
@@ -133,6 +171,7 @@ function onEntryClick() {
   height: 100%;
   object-fit: cover;
   display: block;
+  object-position: center center;
 }
 
 .game-icon-grid__emoji-fallback {
@@ -141,12 +180,13 @@ function onEntryClick() {
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-size: 1.75rem;
+  font-size: 1rem;
+  font-weight: 900;
   line-height: 1;
 }
 
 .game-icon-grid__caption {
-  font-size: 0.52rem;
+  font-size: 0.46rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -159,7 +199,6 @@ function onEntryClick() {
   white-space: nowrap;
 }
 
-/* Theme glow borders — TEK-HEN cyan, basketball green, hammer-style yellow, bingo purple */
 .game-icon-grid__cell--cyan .game-icon-grid__thumb {
   box-shadow:
     0 0 0 1px rgba(34, 211, 238, 0.55),
@@ -282,6 +321,12 @@ function onEntryClick() {
 
   .game-icon-grid__cell:hover .game-icon-grid__thumb {
     transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .game-icon-grid__inner {
+    grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
   }
 }
 </style>

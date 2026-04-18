@@ -322,3 +322,84 @@ body {
     align-items: stretch;
   }
 }
+
+.more-games-desktop {
+  display: none;
+}
+
+.more-games-mobile {
+  display: none;
+}
+
+.bingo-floating-game-strip {
+  position: fixed;
+  right: max(0.75rem, env(safe-area-inset-right));
+  top: 50%;
+  z-index: 40;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.bingo-floating-game-strip__panel {
+  pointer-events: auto;
+  width: clamp(124px, 12vw, 164px);
+}
+
+@media (min-width: 768px), (orientation: landscape) {
+  .more-games-desktop {
+    display: block;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .more-games-mobile {
+    display: block;
+  }
+}
+
+.fiesta-shell--instant .fiesta-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.88fr);
+  align-items: start;
+}
+
+.fiesta-shell--instant {
+  padding-right: clamp(13rem, 16vw, 18rem);
+}
+
+.fiesta-shell--instant .fiesta-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+.fiesta-shell--instant .more-games-desktop {
+  display: block;
+}
+
+.fiesta-shell--instant .fiesta-header {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.fiesta-shell--instant .more-games-mobile {
+  display: none !important;
+}
+
+.fiesta-landscape-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(8px);
+}
+
+.fiesta-landscape-gate__card {
+  width: min(92vw, 420px);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}

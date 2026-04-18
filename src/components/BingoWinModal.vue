@@ -57,9 +57,12 @@
           <input
             v-model="phoneNumber"
             type="tel"
+            inputmode="numeric"
             autocomplete="tel"
-            placeholder="+1 555 000 0000"
+            maxlength="10"
+            placeholder="9651212789"
             class="w-full rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 font-semibold placeholder:text-amber-400 focus:border-amber-500 focus:outline-none"
+            @input="handlePhoneInput"
             @keyup.enter="tryPlayAgain"
           />
           <p v-if="phoneError" class="mt-2 text-xs font-bold text-red-600">{{ phoneError }}</p>
@@ -89,6 +92,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { postGameLogin } from '../lib/gameLoginApi'
 import { loadStoredPhone, saveStoredPhone } from '../lib/phoneStorage'
+import {
+  isValidPhilippineMobileNumber,
+  normalizePhilippineMobileNumber,
+  sanitizePhilippineMobileInput,
+} from '../lib/phoneValidation'
 
 const props = defineProps({
   message: { type: String, default: '' },
@@ -103,27 +111,32 @@ const phoneError = ref('')
 const apiError = ref('')
 const isSubmitting = ref(false)
 
-const validatePhoneNumber = (phone) => {
-  const digitsOnly = phone.replace(/\D/g, '')
-  return digitsOnly.length >= 7
-}
+const phoneValid = computed(() => isValidPhilippineMobileNumber(phoneNumber.value))
 
-const phoneValid = computed(() => validatePhoneNumber(phoneNumber.value))
+const handlePhoneInput = () => {
+  phoneNumber.value = sanitizePhilippineMobileInput(phoneNumber.value)
+}
 
 const tryPlayAgain = async () => {
   phoneError.value = ''
   apiError.value = ''
-  if (!validatePhoneNumber(phoneNumber.value)) {
-    phoneError.value = 'Please enter a valid phone number.'
+  handlePhoneInput()
+  if (!isValidPhilippineMobileNumber(phoneNumber.value)) {
+    phoneError.value = 'Please enter a valid 10-digit mobile number.'
     return
   }
 
   isSubmitting.value = true
   try {
-    saveStoredPhone(phoneNumber.value)
-    await postGameLogin(phoneNumber.value)
+    const normalizedPhone = normalizePhilippineMobileNumber(phoneNumber.value)
+    await postGameLogin(normalizedPhone)
+    saveStoredPhone(normalizedPhone)
     emit('play-again')
   } catch (error) {
+    if (error instanceof Error && error.code === 'PHONE_EXISTS') {
+      apiError.value = error.message
+      return
+    }
     const messageText = error instanceof Error ? error.message : 'Verification failed. Try again.'
     apiError.value = messageText
   } finally {
@@ -213,7 +226,7 @@ function playCelebrationSounds() {
 onMounted(() => {
   const savedPhone = loadStoredPhone()
   if (savedPhone) {
-    phoneNumber.value = savedPhone
+    phoneNumber.value = sanitizePhilippineMobileInput(savedPhone)
   }
   confettiPieces.value = buildConfettiPieces()
   playCelebrationSounds()

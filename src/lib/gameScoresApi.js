@@ -1,5 +1,5 @@
 const GAME_SCORES_URL =
-  'https://docking-635955947416.asia-east1.run.app/api/game-score/bing-fiesta/scores'
+  'https://docking-635955947416.asia-east1.run.app/api/auth/game-login'
 
 /**
  * Fetches leaderboard rows: { phone, game_id?, points? }[].

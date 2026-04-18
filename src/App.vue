@@ -8,13 +8,18 @@ import PhoneVerifyModal from './components/PhoneVerifyModal.vue'
 import GameIconGrid from './components/GameIconGrid.vue'
 import { useBingoStore } from './store/gameStore'
 import { buildFakeGameScores, fetchGameScores } from './lib/gameScoresApi'
+import { isRunningInFBInstant } from './services/fbInstant.js'
 
 const store = useBingoStore()
 const invalidCell = ref(null)
 const invalidCellSecond = ref(null)
 const showVerifyModal = ref(false)
+const isPortrait = ref(false)
+const isInstantLayout = isRunningInFBInstant()
 let phaserGame = null
 let ballTimer = null
+let orientationMediaQuery = null
+let orientationChangeHandler = null
 
 const getBingoLetter = (number) => {
   if (number >= 1 && number <= 15) return 'B'
@@ -140,7 +145,23 @@ function stopMarqueeCenterPopLoop() {
   }
 }
 
+function syncOrientationState() {
+  if (typeof window === 'undefined') return
+  isPortrait.value = window.matchMedia('(orientation: portrait)').matches
+}
+
 onMounted(() => {
+  syncOrientationState()
+  if (typeof window !== 'undefined') {
+    orientationMediaQuery = window.matchMedia('(orientation: portrait)')
+    orientationChangeHandler = () => syncOrientationState()
+    if (orientationMediaQuery.addEventListener) {
+      orientationMediaQuery.addEventListener('change', orientationChangeHandler)
+    } else if (orientationMediaQuery.addListener) {
+      orientationMediaQuery.addListener(orientationChangeHandler)
+    }
+  }
+
   loadMarqueeScores()
 
   store.startGame()
@@ -148,8 +169,8 @@ onMounted(() => {
   phaserGame = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'phaser-root',
-    width: 320,
-    height: 260,
+    width: 480,
+    height: 270,
     transparent: true,
     scene: [BingoScene],
     scale: {
@@ -167,6 +188,15 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopMarqueeCenterPopLoop()
+  if (orientationMediaQuery && orientationChangeHandler) {
+    if (orientationMediaQuery.removeEventListener) {
+      orientationMediaQuery.removeEventListener('change', orientationChangeHandler)
+    } else if (orientationMediaQuery.removeListener) {
+      orientationMediaQuery.removeListener(orientationChangeHandler)
+    }
+    orientationMediaQuery = null
+    orientationChangeHandler = null
+  }
   if (phaserGame) {
     phaserGame.destroy(true)
     phaserGame = null
@@ -179,10 +209,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="fiesta-shell min-h-screen p-4 text-white">
+  <div :class="['fiesta-shell', { 'fiesta-shell--instant': isInstantLayout }]" class="min-h-screen p-3 text-white md:p-4">
     <div class="fiesta-confetti"></div>
-    <div class="mx-auto max-w-7xl space-y-6">
-      <header class="fiesta-header mb-5">
+    <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4">
+      <header class="fiesta-header">
         <div>
           <p class="fiesta-kicker">Instant Download Party Board</p>
           <h1 class="mb-2 text-4xl font-black uppercase tracking-[0.08em] text-white md:text-5xl">Bingo Fiesta</h1>
@@ -198,19 +228,19 @@ onBeforeUnmount(() => {
         </div>
       </header>
 
-      <section class="grid gap-4 md:grid-cols-[30%_70%]">
+      <section class="fiesta-main-grid grid flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.88fr)]">
         <article class="space-y-4">
-          <div class="grid grid-cols-1 gap-3">
+          <div class="fiesta-top-grid grid gap-3 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
             <div class="fiesta-panel rounded-[28px] p-5">
               <h2 class="fiesta-panel-title">Current Ball</h2>
               <p class="sr-only" aria-live="polite">{{ currentBallCallout || 'No ball drawn yet' }}</p>
               <div class="mt-4 flex flex-col items-center gap-4">
                 <div
                   id="phaser-root"
-                  class="fiesta-machine-frame flex w-full max-w-[320px] items-center justify-center overflow-hidden rounded-[22px]"
+                  class="fiesta-machine-frame flex w-full max-w-[480px] items-center justify-center overflow-hidden rounded-[22px]"
                   :aria-label="currentBallCallout || 'Ball display'"
                 ></div>
-                <div class="flex w-full max-w-[320px] flex-col items-center gap-2 text-center">
+                <div class="flex w-full max-w-[480px] flex-col items-center gap-2 text-center">
                   <span
                     v-if="store.currentBall"
                     class="inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-bold tracking-[0.08em] text-amber-950 shadow-[0_6px_14px_rgba(120,53,15,0.12)]"
@@ -323,8 +353,33 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
+
         </aside>
       </section>
+
+      <section v-if="!isInstantLayout && isPortrait" class="fiesta-panel mt-1 rounded-[28px] p-4 more-games-mobile">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 class="fiesta-panel-title mb-1">More Games</h2>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-900/60">
+              Open the other Instant Games
+            </p>
+          </div>
+        </div>
+        <GameIconGrid layout="compact" />
+      </section>
+    </div>
+
+    <div v-if="isInstantLayout || !isPortrait" class="bingo-floating-game-strip more-games-desktop">
+      <div class="bingo-floating-game-strip__panel rounded-2xl border border-amber-300/25 bg-black/55 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
+        <div class="mb-2 px-1 pt-1">
+          <h2 class="text-[0.65rem] font-black uppercase tracking-[0.18em] text-amber-50/95">More Games</h2>
+          <p class="text-[0.48rem] font-semibold uppercase tracking-[0.18em] text-amber-50/60">
+            Open the other Instant Games
+          </p>
+        </div>
+        <GameIconGrid layout="stack" />
+      </div>
     </div>
 
     <!-- Phone verification modal -->
@@ -336,14 +391,16 @@ onBeforeUnmount(() => {
 
     <BingoWinModal v-if="store.playerWon" :message="store.message" @play-again="startNewGame" />
 
-    <div
-      class="bingo-floating-game-strip pointer-events-none fixed right-[max(0.75rem,env(safe-area-inset-right))] top-1/2 z-40 -translate-y-1/2 max-md:top-auto max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:translate-y-0"
-    >
-      <div
-        class="pointer-events-auto rounded-2xl border border-amber-300/25 bg-black/55 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
-      >
-        <GameIconGrid />
+    <Teleport to="body">
+      <div v-if="isPortrait && !isInstantLayout" class="fiesta-landscape-gate" role="alertdialog" aria-live="assertive">
+        <div class="fiesta-panel fiesta-landscape-gate__card rounded-[28px] p-6 text-center">
+          <p class="mb-2 text-4xl font-black">Rotate</p>
+          <h2 class="fiesta-panel-title mb-2 text-2xl">Landscape Required</h2>
+          <p class="text-sm font-semibold text-amber-900/80">
+            Please rotate your device to landscape to play Bingo Fiesta.
+          </p>
+        </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>

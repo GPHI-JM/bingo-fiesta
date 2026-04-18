@@ -18,8 +18,12 @@
             <input
               v-model="phoneNumber"
               type="tel"
-              placeholder="+1 555 000 0000"
+              inputmode="numeric"
+              autocomplete="tel"
+              maxlength="10"
+              placeholder="9651212789"
               class="w-full rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 font-semibold placeholder:text-amber-400 focus:border-amber-500 focus:outline-none"
+              @input="handlePhoneInput"
               @keyup.enter="submitPhone"
             />
           </div>
@@ -27,9 +31,10 @@
           <button
             type="button"
             @click="submitPhone"
-            class="w-full rounded-2xl bg-amber-500 px-5 py-3 font-bold text-slate-950 transition hover:bg-amber-400"
+            :disabled="isSubmitting"
+            class="w-full rounded-2xl bg-amber-500 px-5 py-3 font-bold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-amber-200 disabled:text-amber-900/50"
           >
-            Add free card
+            {{ isSubmitting ? 'Verifying...' : 'Add free card' }}
           </button>
         </div>
 
@@ -48,32 +53,53 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { postGameLogin } from '../lib/gameLoginApi'
 import { loadStoredPhone, saveStoredPhone } from '../lib/phoneStorage'
+import {
+  isValidPhilippineMobileNumber,
+  normalizePhilippineMobileNumber,
+  sanitizePhilippineMobileInput,
+} from '../lib/phoneValidation'
 
 const emit = defineEmits(['close', 'verified'])
 
 const phoneNumber = ref('')
 const phoneError = ref('')
-
-const validatePhoneNumber = (phone) => {
-  const digitsOnly = phone.replace(/\D/g, '')
-  return digitsOnly.length >= 7
-}
+const isSubmitting = ref(false)
 
 onMounted(() => {
   const saved = loadStoredPhone()
   if (saved) {
-    phoneNumber.value = saved
+    phoneNumber.value = sanitizePhilippineMobileInput(saved)
   }
 })
 
-const submitPhone = () => {
+const handlePhoneInput = () => {
+  phoneNumber.value = sanitizePhilippineMobileInput(phoneNumber.value)
+}
+
+const submitPhone = async () => {
   phoneError.value = ''
-  if (!validatePhoneNumber(phoneNumber.value)) {
-    phoneError.value = 'Please enter a valid phone number.'
+  handlePhoneInput()
+  if (!isValidPhilippineMobileNumber(phoneNumber.value)) {
+    phoneError.value = 'Please enter a valid 10-digit mobile number.'
     return
   }
-  saveStoredPhone(phoneNumber.value)
-  emit('verified')
+
+  isSubmitting.value = true
+  try {
+    const normalizedPhone = normalizePhilippineMobileNumber(phoneNumber.value)
+    await postGameLogin(normalizedPhone)
+    saveStoredPhone(normalizedPhone)
+    emit('verified')
+  } catch (error) {
+    if (error instanceof Error && error.code === 'PHONE_EXISTS') {
+      phoneError.value = error.message
+      return
+    }
+    phoneError.value = error instanceof Error ? error.message : 'Verification failed. Try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
