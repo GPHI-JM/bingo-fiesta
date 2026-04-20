@@ -1,13 +1,15 @@
 <template>
   <aside :class="['game-icon-grid', `game-icon-grid--${layout}`]" aria-label="More carnival games">
     <div class="game-icon-grid__inner">
-      <button
+      <a
         v-for="entry in gameEntries"
         :key="entry.id"
-        type="button"
+        :href="entry.url || undefined"
+        :target="entry.url ? '_blank' : undefined"
+        :rel="entry.url ? 'noopener noreferrer' : undefined"
         class="game-icon-grid__cell"
         :class="`game-icon-grid__cell--${entry.theme}`"
-        @click="openGame(entry)"
+        @click="handleGameClick(entry, $event)"
       >
         <span class="game-icon-grid__thumb">
           <span class="game-icon-grid__hot" aria-hidden="true">HOT</span>
@@ -23,7 +25,7 @@
           <span v-else class="game-icon-grid__emoji-fallback" aria-hidden="true">{{ entry.fallback }}</span>
         </span>
         <!-- <span class="game-icon-grid__caption">{{ entry.alt }}</span> -->
-      </button>
+      </a>
     </div>
   </aside>
 </template>
@@ -46,14 +48,6 @@ const imageFailed = reactive({})
 const layout = computed(() => (props.layout === 'compact' ? 'compact' : 'stack'))
 
 const gameEntries = [
-  // {
-  //   id: 'bf',
-  //   src: bfIcon,
-  //   alt: 'bf_icon',
-  //   url: 'https://fb.gg/play/1463506198613599',
-  //   fallback: 'BF',
-  //   theme: 'cyan',
-  // },
   {
     id: 'nf',
     src: nfIcon,
@@ -74,7 +68,7 @@ const gameEntries = [
     id: 'tekhen',
     src: tekhenIcon,
     alt: 'tekhen_icon',
-    url: null,
+    url: 'https://fb.gg/play/2136783867072234',
     fallback: 'TK',
     theme: 'purple',
   },
@@ -84,12 +78,12 @@ function markImageFailed(src) {
   imageFailed[src] = true
 }
 
-function openGame(entry) {
+function handleGameClick(entry, event) {
   if (entry.url) {
-    window.open(entry.url, '_blank', 'noopener,noreferrer')
     return
   }
 
+  event.preventDefault()
   window.alert('Coming soon')
 }
 </script>
@@ -125,10 +119,16 @@ function openGame(entry) {
   padding: 0;
   border: none;
   background: transparent;
+  text-decoration: none;
   cursor: pointer;
   border-radius: 0;
   color: #f5f5f4;
   min-width: 0;
+}
+
+.game-icon-grid__cell:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
 }
 
 .game-icon-grid--stack .game-icon-grid__cell {
