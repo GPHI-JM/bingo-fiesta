@@ -33,7 +33,11 @@
 
 <script setup>
 import { computed, reactive } from 'vue'
-import { isFBInstantInitialized, switchGameAsync } from '../services/fbInstant.js'
+import {
+  isFBInstantInitialized,
+  switchGameAsync,
+  tryNavigatePlayUrlViaTopWindow,
+} from '../services/fbInstant.js'
 import nfIcon from '../assets/icons/nf_icon.png'
 import phIcon from '../assets/icons/ph_icon.png'
 import tekhenIcon from '../assets/icons/tekhen_icon.png'
@@ -88,8 +92,14 @@ async function onGameEntryActivate(clickEvent, gameEntry) {
   }
   clickEvent.preventDefault()
   const switchResult = await switchGameAsync(gameEntry.appId)
-  if (!switchResult.success) {
-    globalThis.open(gameEntry.url, '_blank', 'noopener,noreferrer')
+  if (switchResult.success) {
+    return
+  }
+  const topNavigationResult = tryNavigatePlayUrlViaTopWindow(gameEntry.url)
+  if (!topNavigationResult.success) {
+    console.warn(
+      '[GameIconGrid] Could not open other game. Fix same-business linking for switchGameAsync, or rely on opening outside Instant Games.'
+    )
   }
 }
 </script>

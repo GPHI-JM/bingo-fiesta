@@ -202,16 +202,16 @@ export async function switchContextAsync(contextId) {
  * Open another Instant Game by app ID (required inside the FB IG WebView; plain links often do nothing).
  * @param {string} targetAppId - Instant Game app ID to switch to
  * @param {string} [optionalPayload] - Optional string passed to the target game
- * @returns {Promise<{ success: boolean, error?: string }>}
+ * @returns {Promise<{ success: boolean, error?: string, code?: string }>}
  */
 export async function switchGameAsync(targetAppId, optionalPayload) {
   if (!isInitialized) {
     console.warn('[FB Instant] SDK not initialized')
-    return { success: false, error: 'not_initialized' }
+    return { success: false, error: 'not_initialized', code: 'NOT_INITIALIZED' }
   }
   if (typeof fbInstant.switchGameAsync !== 'function') {
     console.warn('[FB Instant] switchGameAsync is not available in this SDK')
-    return { success: false, error: 'unsupported' }
+    return { success: false, error: 'unsupported', code: 'UNSUPPORTED' }
   }
   try {
     if (optionalPayload !== undefined && optionalPayload !== null) {
@@ -222,8 +222,40 @@ export async function switchGameAsync(targetAppId, optionalPayload) {
     console.log('[FB Instant] Switched to game:', targetAppId)
     return { success: true }
   } catch (error) {
+    const errorCode = typeof error?.code === 'string' ? error.code : undefined
+    const errorMessage = typeof error?.message === 'string' ? error.message : String(error)
     console.error('[FB Instant] Failed to switch game:', error)
-    return { success: false, error: error.message }
+    if (errorCode === 'INVALID_PARAM') {
+      console.warn(
+        '[FB Instant] Cross-game switch needs the target Instant Game in the same Meta Business as this app (Business Settings). Trying top-level navigation to the play URL instead.'
+      )
+    }
+    return { success: false, error: errorMessage, code: errorCode }
+  }
+}
+
+/**
+ * Instant Game iframes block window.open (no allow-popups). After switchGameAsync fails, assigning the
+ * play URL on the top window may still navigate on a user gesture (behavior depends on the host).
+ * @param {string} playUrl - e.g. https://fb.gg/play/{appId}
+ * @returns {{ success: boolean, error?: string }}
+ */
+export function tryNavigatePlayUrlViaTopWindow(playUrl) {
+  if (typeof playUrl !== 'string' || !playUrl.startsWith('https://')) {
+    return { success: false, error: 'invalid_url' }
+  }
+  try {
+    const topWindow = globalThis.top
+    if (!topWindow || topWindow === globalThis.self) {
+      return { success: false, error: 'no_parent_frame' }
+    }
+    topWindow.location.assign(playUrl)
+    return { success: true }
+  } catch (navigationError) {
+    const message =
+      typeof navigationError?.message === 'string' ? navigationError.message : String(navigationError)
+    console.warn('[FB Instant] Top-level navigation to play URL was blocked:', message)
+    return { success: false, error: message }
   }
 }
 
