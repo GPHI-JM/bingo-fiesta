@@ -199,6 +199,35 @@ export async function switchContextAsync(contextId) {
 }
 
 /**
+ * Open another Instant Game by app ID (required inside the FB IG WebView; plain links often do nothing).
+ * @param {string} targetAppId - Instant Game app ID to switch to
+ * @param {string} [optionalPayload] - Optional string passed to the target game
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function switchGameAsync(targetAppId, optionalPayload) {
+  if (!isInitialized) {
+    console.warn('[FB Instant] SDK not initialized')
+    return { success: false, error: 'not_initialized' }
+  }
+  if (typeof fbInstant.switchGameAsync !== 'function') {
+    console.warn('[FB Instant] switchGameAsync is not available in this SDK')
+    return { success: false, error: 'unsupported' }
+  }
+  try {
+    if (optionalPayload !== undefined && optionalPayload !== null) {
+      await fbInstant.switchGameAsync(targetAppId, optionalPayload)
+    } else {
+      await fbInstant.switchGameAsync(targetAppId)
+    }
+    console.log('[FB Instant] Switched to game:', targetAppId)
+    return { success: true }
+  } catch (error) {
+    console.error('[FB Instant] Failed to switch game:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
  * Quit the game
  */
 export async function quitAsync() {

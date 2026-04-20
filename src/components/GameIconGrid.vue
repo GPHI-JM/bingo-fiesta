@@ -10,6 +10,7 @@
         class="game-icon-grid__cell"
         :class="`game-icon-grid__cell--${entry.theme}`"
         :aria-label="`Open ${entry.alt}`"
+        @click="onGameEntryActivate($event, entry)"
       >
         <span class="game-icon-grid__thumb">
           <span class="game-icon-grid__hot" aria-hidden="true">HOT</span>
@@ -32,6 +33,7 @@
 
 <script setup>
 import { computed, reactive } from 'vue'
+import { isFBInstantInitialized, switchGameAsync } from '../services/fbInstant.js'
 import nfIcon from '../assets/icons/nf_icon.png'
 import phIcon from '../assets/icons/ph_icon.png'
 import tekhenIcon from '../assets/icons/tekhen_icon.png'
@@ -78,6 +80,17 @@ const gameEntries = [
 
 function markImageFailed(src) {
   imageFailed[src] = true
+}
+
+async function onGameEntryActivate(clickEvent, gameEntry) {
+  if (!isFBInstantInitialized()) {
+    return
+  }
+  clickEvent.preventDefault()
+  const switchResult = await switchGameAsync(gameEntry.appId)
+  if (!switchResult.success) {
+    globalThis.open(gameEntry.url, '_blank', 'noopener,noreferrer')
+  }
 }
 </script>
 
