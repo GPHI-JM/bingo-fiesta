@@ -227,7 +227,7 @@ export async function switchGameAsync(targetAppId, optionalPayload) {
     console.error('[FB Instant] Failed to switch game:', error)
     if (errorCode === 'INVALID_PARAM') {
       console.warn(
-        '[FB Instant] Cross-game switch needs the target Instant Game in the same Meta Business as this app (Business Settings). Trying top-level navigation to the play URL instead.'
+        '[FB Instant] Cross-game switch needs the target Instant Game in the same Meta Business (Business Settings). Falling back to opening the play URL in this game frame.'
       )
     }
     return { success: false, error: errorMessage, code: errorCode }
@@ -235,26 +235,24 @@ export async function switchGameAsync(targetAppId, optionalPayload) {
 }
 
 /**
- * Instant Game iframes block window.open (no allow-popups). After switchGameAsync fails, assigning the
- * play URL on the top window may still navigate on a user gesture (behavior depends on the host).
+ * FB hosts Instant Games on e.g. *.fbsbx.com; the parent frame is cross-origin, so top.location is not
+ * script-accessible. Navigating this frame to fb.gg avoids that and often works after switchGameAsync fails.
+ * Popups (window.open) are blocked in the sandbox; this does not use them.
+ *
  * @param {string} playUrl - e.g. https://fb.gg/play/{appId}
  * @returns {{ success: boolean, error?: string }}
  */
-export function tryNavigatePlayUrlViaTopWindow(playUrl) {
+export function tryNavigatePlayUrlInGameFrame(playUrl) {
   if (typeof playUrl !== 'string' || !playUrl.startsWith('https://')) {
     return { success: false, error: 'invalid_url' }
   }
   try {
-    const topWindow = globalThis.top
-    if (!topWindow || topWindow === globalThis.self) {
-      return { success: false, error: 'no_parent_frame' }
-    }
-    topWindow.location.assign(playUrl)
+    globalThis.location.assign(playUrl)
     return { success: true }
   } catch (navigationError) {
     const message =
       typeof navigationError?.message === 'string' ? navigationError.message : String(navigationError)
-    console.warn('[FB Instant] Top-level navigation to play URL was blocked:', message)
+    console.warn('[FB Instant] In-frame navigation to play URL failed:', message)
     return { success: false, error: message }
   }
 }

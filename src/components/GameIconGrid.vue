@@ -36,7 +36,7 @@ import { computed, reactive } from 'vue'
 import {
   isFBInstantInitialized,
   switchGameAsync,
-  tryNavigatePlayUrlViaTopWindow,
+  tryNavigatePlayUrlInGameFrame,
 } from '../services/fbInstant.js'
 import nfIcon from '../assets/icons/nf_icon.png'
 import phIcon from '../assets/icons/ph_icon.png'
@@ -95,10 +95,10 @@ async function onGameEntryActivate(clickEvent, gameEntry) {
   if (switchResult.success) {
     return
   }
-  const topNavigationResult = tryNavigatePlayUrlViaTopWindow(gameEntry.url)
-  if (!topNavigationResult.success) {
+  const frameNavigationResult = tryNavigatePlayUrlInGameFrame(gameEntry.url)
+  if (!frameNavigationResult.success) {
     console.warn(
-      '[GameIconGrid] Could not open other game. Fix same-business linking for switchGameAsync, or rely on opening outside Instant Games.'
+      '[GameIconGrid] Could not open other game. Link Instant Games under one Meta Business for switchGameAsync, or open from outside the IG canvas.'
     )
   }
 }
