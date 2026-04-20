@@ -26,9 +26,16 @@ body {
 .fiesta-shell {
   position: relative;
   overflow: hidden;
+  --stage-scale: 1;
   background:
     linear-gradient(rgba(255, 250, 230, 0.08), rgba(255, 250, 230, 0.08)),
     linear-gradient(rgba(94, 45, 11, 0.16), rgba(94, 45, 11, 0.16));
+}
+
+.fiesta-stage {
+  position: relative;
+  width: min(1600px, calc(1600px * var(--stage-scale)));
+  margin: 0 auto;
 }
 
 .fiesta-confetti {
@@ -323,14 +330,6 @@ body {
   }
 }
 
-.more-games-desktop {
-  display: none;
-}
-
-.more-games-mobile {
-  display: none;
-}
-
 .bingo-floating-game-strip {
   position: fixed;
   right: max(0.75rem, env(safe-area-inset-right));
@@ -345,61 +344,231 @@ body {
   width: clamp(124px, 12vw, 164px);
 }
 
-@media (min-width: 768px), (orientation: landscape) {
-  .more-games-desktop {
-    display: block;
-  }
+.more-games-desktop {
+  display: block;
 }
 
-@media (max-width: 767px) and (orientation: portrait) {
-  .more-games-mobile {
-    display: block;
-  }
+.more-games-mobile {
+  display: none !important;
 }
 
-.fiesta-shell--instant .fiesta-main-grid {
+.fiesta-stage .fiesta-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, 0.88fr);
   align-items: start;
 }
 
-.fiesta-shell--instant {
-  padding-right: clamp(13rem, 16vw, 18rem);
-}
-
-.fiesta-shell--instant .fiesta-top-grid {
+.fiesta-stage .fiesta-top-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
 }
 
-.fiesta-shell--instant .more-games-desktop {
-  display: block;
-}
-
-.fiesta-shell--instant .fiesta-header {
+.fiesta-stage .fiesta-header {
   flex-direction: row;
   align-items: flex-start;
 }
 
-.fiesta-shell--instant .more-games-mobile {
-  display: none !important;
-}
+@media (max-width: 768px) {
+  .fiesta-stage {
+    gap: 0.7rem;
+  }
 
-.fiesta-landscape-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.76);
-  backdrop-filter: blur(8px);
-}
+  .fiesta-shell {
+    padding: 0.35rem;
+  }
 
-.fiesta-landscape-gate__card {
-  width: min(92vw, 420px);
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.35),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  .fiesta-stage {
+    transform: scale(0.84);
+    transform-origin: top center;
+    margin-bottom: -12%;
+  }
+
+  .fiesta-stage .fiesta-header {
+    gap: 12px;
+    padding: 18px 20px;
+    border-width: 3px;
+  }
+
+  .fiesta-stage h1,
+  .fiesta-stage .text-4xl,
+  .fiesta-stage .md\:text-5xl {
+    font-size: 1.9rem;
+    line-height: 1;
+  }
+
+  .fiesta-stage p {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .fiesta-stage .fiesta-kicker {
+    font-size: 9px;
+    margin-bottom: 4px;
+    letter-spacing: 0.18em;
+  }
+
+  .fiesta-stage .fiesta-badge {
+    min-width: 82px;
+    padding: 8px 10px;
+  }
+
+  .fiesta-stage .fiesta-badge-number {
+    font-size: 24px;
+  }
+
+  .fiesta-stage .fiesta-badge-text {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .fiesta-stage .fiesta-main-grid {
+    gap: 0.55rem;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+  }
+
+  .fiesta-stage .fiesta-top-grid {
+    gap: 0.45rem;
+    grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+  }
+
+  .fiesta-stage .fiesta-panel {
+    border-width: 3px;
+    border-radius: 20px;
+  }
+
+  .fiesta-stage .fiesta-panel-title {
+    font-size: 0.8rem;
+  }
+
+  .fiesta-stage .fiesta-machine-frame {
+    min-height: 160px;
+    border-radius: 16px;
+  }
+
+  .fiesta-stage .fiesta-called-ball {
+    width: 24px;
+    height: 24px;
+    font-size: 7px;
+  }
+
+  .fiesta-stage .rounded-\[28px\] {
+    border-radius: 18px;
+  }
+
+  .fiesta-stage .rounded-\[24px\] {
+    border-radius: 16px;
+  }
+
+  .fiesta-stage .rounded-\[22px\] {
+    border-radius: 14px;
+  }
+
+  .fiesta-stage .p-5 {
+    padding: 0.85rem;
+  }
+
+  .fiesta-stage .p-4 {
+    padding: 0.65rem;
+  }
+
+  .fiesta-stage .mb-4 {
+    margin-bottom: 0.55rem;
+  }
+
+  .fiesta-stage .mb-3 {
+    margin-bottom: 0.4rem;
+  }
+
+  .fiesta-stage .mt-4 {
+    margin-top: 0.5rem;
+  }
+
+  .fiesta-stage .gap-4 {
+    gap: 0.6rem;
+  }
+
+  .fiesta-stage .gap-3 {
+    gap: 0.4rem;
+  }
+
+  .fiesta-stage .text-xs {
+    font-size: 0.68rem;
+  }
+
+  .fiesta-stage .text-sm {
+    font-size: 0.72rem;
+  }
+
+  .fiesta-stage .text-base {
+    font-size: 0.8rem;
+  }
+
+  .fiesta-stage .py-2 {
+    padding-top: 0.34rem;
+    padding-bottom: 0.34rem;
+  }
+
+  .fiesta-stage .px-4 {
+    padding-left: 0.72rem;
+    padding-right: 0.72rem;
+  }
+
+  .bingo-marquee {
+    border-width: 2px;
+    border-radius: 14px;
+  }
+
+  .bingo-marquee-segment {
+    gap: 0.9rem;
+    padding: 8px 22px 9px;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+  }
+
+  .bingo-floating-game-strip {
+    right: 0.35rem;
+    transform: translateY(-50%) scale(0.86);
+    transform-origin: center right;
+  }
+
+  .bingo-floating-game-strip__panel {
+    width: clamp(90px, 11vw, 128px);
+  }
+
+  .game-icon-grid--stack {
+    max-width: 92px;
+  }
+
+  .game-icon-grid__inner {
+    gap: 0.35rem;
+  }
+
+  .game-icon-grid__thumb {
+    border-radius: 11px;
+  }
+
+  .game-icon-grid__hot {
+    top: 3px;
+    right: 3px;
+    padding: 1px 4px;
+    font-size: 0.38rem;
+  }
+
+  .fiesta-stage .fiesta-main-grid,
+  .fiesta-stage .fiesta-top-grid {
+    gap: 0.5rem;
+  }
+
+  .fiesta-stage .fiesta-panel,
+  .fiesta-stage .fiesta-header {
+    border-width: 3px;
+  }
+
+  .bingo-floating-game-strip__panel {
+    width: clamp(98px, 11vw, 136px);
+  }
+
+  .game-icon-grid--stack {
+    max-width: 96px;
+  }
 }

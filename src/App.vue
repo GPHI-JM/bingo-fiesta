@@ -8,18 +8,16 @@ import PhoneVerifyModal from './components/PhoneVerifyModal.vue'
 import GameIconGrid from './components/GameIconGrid.vue'
 import { useBingoStore } from './store/gameStore'
 import { buildFakeGameScores, fetchGameScores } from './lib/gameScoresApi'
-import { isRunningInFBInstant } from './services/fbInstant.js'
 
 const store = useBingoStore()
 const invalidCell = ref(null)
 const invalidCellSecond = ref(null)
 const showVerifyModal = ref(false)
-const isPortrait = ref(false)
-const isInstantLayout = isRunningInFBInstant()
+const viewportWidth = ref(1600)
+const viewportHeight = ref(900)
 let phaserGame = null
 let ballTimer = null
-let orientationMediaQuery = null
-let orientationChangeHandler = null
+let resizeHandler = null
 
 const getBingoLetter = (number) => {
   if (number >= 1 && number <= 15) return 'B'
@@ -84,6 +82,19 @@ const onPhoneVerified = () => {
   store.addSecondCard()
 }
 
+const STAGE_DESIGN_WIDTH = 1600
+const STAGE_DESIGN_HEIGHT = 920
+
+const stageScale = computed(() => {
+  const widthScale = viewportWidth.value / STAGE_DESIGN_WIDTH
+  const heightScale = viewportHeight.value / STAGE_DESIGN_HEIGHT
+  return Math.min(1, widthScale, heightScale)
+})
+
+const stageStyle = computed(() => ({
+  '--stage-scale': stageScale.value.toFixed(4),
+}))
+
 const scoreRows = ref(buildFakeGameScores())
 
 const marqueeItems = computed(() =>
@@ -145,21 +156,17 @@ function stopMarqueeCenterPopLoop() {
   }
 }
 
-function syncOrientationState() {
+function syncViewportSize() {
   if (typeof window === 'undefined') return
-  isPortrait.value = window.matchMedia('(orientation: portrait)').matches
+  viewportWidth.value = window.innerWidth
+  viewportHeight.value = window.innerHeight
 }
 
 onMounted(() => {
-  syncOrientationState()
+  syncViewportSize()
   if (typeof window !== 'undefined') {
-    orientationMediaQuery = window.matchMedia('(orientation: portrait)')
-    orientationChangeHandler = () => syncOrientationState()
-    if (orientationMediaQuery.addEventListener) {
-      orientationMediaQuery.addEventListener('change', orientationChangeHandler)
-    } else if (orientationMediaQuery.addListener) {
-      orientationMediaQuery.addListener(orientationChangeHandler)
-    }
+    resizeHandler = () => syncViewportSize()
+    window.addEventListener('resize', resizeHandler)
   }
 
   loadMarqueeScores()
@@ -188,14 +195,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopMarqueeCenterPopLoop()
-  if (orientationMediaQuery && orientationChangeHandler) {
-    if (orientationMediaQuery.removeEventListener) {
-      orientationMediaQuery.removeEventListener('change', orientationChangeHandler)
-    } else if (orientationMediaQuery.removeListener) {
-      orientationMediaQuery.removeListener(orientationChangeHandler)
-    }
-    orientationMediaQuery = null
-    orientationChangeHandler = null
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+    resizeHandler = null
   }
   if (phaserGame) {
     phaserGame.destroy(true)
@@ -209,9 +211,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div :class="['fiesta-shell', { 'fiesta-shell--instant': isInstantLayout }]" class="min-h-screen p-3 text-white md:p-4">
+  <div class="fiesta-shell min-h-screen p-3 text-white md:p-4" :style="stageStyle">
     <div class="fiesta-confetti"></div>
-    <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4">
+    <div class="fiesta-stage mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4">
       <header class="fiesta-header">
         <div>
           <p class="fiesta-kicker">Instant Download Party Board</p>
@@ -356,21 +358,9 @@ onBeforeUnmount(() => {
 
         </aside>
       </section>
-
-      <section v-if="!isInstantLayout && isPortrait" class="fiesta-panel mt-1 rounded-[28px] p-4 more-games-mobile">
-        <div class="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <h2 class="fiesta-panel-title mb-1">More Games</h2>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-900/60">
-              Open the other Instant Games
-            </p>
-          </div>
-        </div>
-        <GameIconGrid layout="compact" />
-      </section>
     </div>
 
-    <div v-if="isInstantLayout || !isPortrait" class="bingo-floating-game-strip more-games-desktop">
+    <div class="bingo-floating-game-strip more-games-desktop">
       <div class="bingo-floating-game-strip__panel rounded-2xl border border-amber-300/25 bg-black/55 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
         <div class="mb-2 px-1 pt-1">
           <h2 class="text-[0.65rem] font-black uppercase tracking-[0.18em] text-amber-50/95">More Games</h2>
@@ -390,17 +380,5 @@ onBeforeUnmount(() => {
     />
 
     <BingoWinModal v-if="store.playerWon" :message="store.message" @play-again="startNewGame" />
-
-    <Teleport to="body">
-      <div v-if="isPortrait && !isInstantLayout" class="fiesta-landscape-gate" role="alertdialog" aria-live="assertive">
-        <div class="fiesta-panel fiesta-landscape-gate__card rounded-[28px] p-6 text-center">
-          <p class="mb-2 text-4xl font-black">Rotate</p>
-          <h2 class="fiesta-panel-title mb-2 text-2xl">Landscape Required</h2>
-          <p class="text-sm font-semibold text-amber-900/80">
-            Please rotate your device to landscape to play Bingo Fiesta.
-          </p>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
