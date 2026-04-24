@@ -88,7 +88,9 @@ const STAGE_DESIGN_HEIGHT = 920
 const stageScale = computed(() => {
   const widthScale = viewportWidth.value / STAGE_DESIGN_WIDTH
   const heightScale = viewportHeight.value / STAGE_DESIGN_HEIGHT
-  return Math.min(1, widthScale, heightScale)
+  const baseScale = Math.min(1, widthScale, heightScale)
+  const isLandscapeMobile = viewportWidth.value <= 1024 && viewportWidth.value > viewportHeight.value
+  return isLandscapeMobile ? Math.min(1, baseScale * 1.06) : baseScale
 })
 
 const stageStyle = computed(() => ({

@@ -10,7 +10,6 @@
         class="game-icon-grid__cell"
         :class="`game-icon-grid__cell--${entry.theme}`"
         :aria-label="`Open ${entry.alt}`"
-        @click="onGameEntryActivate($event, entry)"
       >
         <span class="game-icon-grid__thumb">
           <span class="game-icon-grid__hot" aria-hidden="true">HOT</span>
@@ -33,11 +32,6 @@
 
 <script setup>
 import { computed, reactive } from 'vue'
-import {
-  isFBInstantInitialized,
-  switchGameAsync,
-  tryNavigatePlayUrlInGameFrame,
-} from '../services/fbInstant.js'
 import nfIcon from '../assets/icons/nf_icon.png'
 import phIcon from '../assets/icons/ph_icon.png'
 import tekhenIcon from '../assets/icons/tekhen_icon.png'
@@ -57,7 +51,6 @@ const gameEntries = [
     id: 'nf',
     src: nfIcon,
     alt: 'nf_icon',
-    appId: '1431508008453701',
     url: 'https://fb.gg/play/1431508008453701',
     fallback: 'NF',
     theme: 'green',
@@ -66,7 +59,6 @@ const gameEntries = [
     id: 'ph',
     src: phIcon,
     alt: 'ph_icon',
-    appId: '4166337263499439',
     url: 'https://fb.gg/play/4166337263499439',
     fallback: 'PH',
     theme: 'yellow',
@@ -75,7 +67,6 @@ const gameEntries = [
     id: 'tekhen',
     src: tekhenIcon,
     alt: 'tekhen_icon',
-    appId: '2136783867072234',
     url: 'https://fb.gg/play/2136783867072234',
     fallback: 'TK',
     theme: 'purple',
@@ -84,23 +75,6 @@ const gameEntries = [
 
 function markImageFailed(src) {
   imageFailed[src] = true
-}
-
-async function onGameEntryActivate(clickEvent, gameEntry) {
-  if (!isFBInstantInitialized()) {
-    return
-  }
-  clickEvent.preventDefault()
-  const switchResult = await switchGameAsync(gameEntry.appId)
-  if (switchResult.success) {
-    return
-  }
-  const frameNavigationResult = tryNavigatePlayUrlInGameFrame(gameEntry.url)
-  if (!frameNavigationResult.success) {
-    console.warn(
-      '[GameIconGrid] Could not open other game. Link Instant Games under one Meta Business for switchGameAsync, or open from outside the IG canvas.'
-    )
-  }
 }
 </script>
 
@@ -352,17 +326,29 @@ async function onGameEntryActivate(clickEvent, gameEntry) {
 }
 
 @media (max-width: 768px) {
+  .game-icon-grid {
+    display: flex;
+  }
+
   .game-icon-grid--stack {
+    display: inline-flex;
     max-width: 92px;
   }
 
   .game-icon-grid__inner {
+    display: inline-flex;
+    flex-direction: column;
     gap: 0.35rem;
+    align-items: stretch;
   }
 
   .game-icon-grid--compact .game-icon-grid__inner {
     grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
     gap: 0.42rem;
+  }
+
+  .game-icon-grid--stack .game-icon-grid__cell {
+    width: 100%;
   }
 
   .game-icon-grid__thumb {
@@ -374,19 +360,6 @@ async function onGameEntryActivate(clickEvent, gameEntry) {
     right: 3px;
     padding: 1px 4px;
     font-size: 0.38rem;
-  }
-}
-@media(max-width:768px){
-  .game-icon-grid__thumb {
-    position: relative;
-    width: 70%;
-    aspect-ratio: 1 / 1;
-    border-radius: 12px;
-    overflow: hidden;
-    background: radial-gradient(ellipse 120% 100% at 50% 20%, #262626 0%, #0a0a0a 55%, #050505 100%);
-    transition:
-      box-shadow 0.22s ease,
-      transform 0.22s ease;
   }
 }
 </style>

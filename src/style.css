@@ -323,13 +323,6 @@ body {
   }
 }
 
-@media (max-width: 768px) {
-  .fiesta-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
 .bingo-floating-game-strip {
   position: fixed;
   right: max(0.75rem, env(safe-area-inset-right));
@@ -368,22 +361,26 @@ body {
   align-items: flex-start;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
+  .fiesta-shell {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
   .fiesta-stage {
     gap: 0.7rem;
+    transform: none;
+    margin-bottom: 0;
+    width: 100%;
   }
 
   .fiesta-shell {
     padding: 0.35rem;
   }
 
-  .fiesta-stage {
-    transform: scale(0.84);
-    transform-origin: top center;
-    margin-bottom: -12%;
-  }
-
   .fiesta-stage .fiesta-header {
+    flex-direction: column;
+    align-items: stretch;
     gap: 12px;
     padding: 18px 20px;
     border-width: 3px;
@@ -423,12 +420,12 @@ body {
 
   .fiesta-stage .fiesta-main-grid {
     gap: 0.55rem;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .fiesta-stage .fiesta-top-grid {
     gap: 0.45rem;
-    grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .fiesta-stage .fiesta-panel {
@@ -564,11 +561,43 @@ body {
     border-width: 3px;
   }
 
+  .bingo-floating-game-strip {
+    right: 0.35rem;
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    transform: translateY(-50%) scale(0.86);
+    transform-origin: center right;
+  }
+
   .bingo-floating-game-strip__panel {
-    width: clamp(98px, 11vw, 136px);
+    width: clamp(90px, 11vw, 128px);
   }
 
   .game-icon-grid--stack {
-    max-width: 96px;
+    max-width: 92px;
+  }
+}
+
+@media (max-width: 1024px) and (orientation: landscape) {
+  .bingo-floating-game-strip {
+    right: 0.35rem;
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    transform: translateY(-50%) scale(0.86);
+    transform-origin: center right;
+  }
+
+  .bingo-floating-game-strip__panel {
+    width: clamp(90px, 11vw, 128px);
+  }
+
+  .bingo-floating-game-strip__panel .game-icon-grid {
+    display: block;
+  }
+
+  .game-icon-grid--stack {
+    max-width: 92px;
   }
 }
