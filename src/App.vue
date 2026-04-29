@@ -291,11 +291,7 @@ onBeforeUnmount(() => {
                   <span class="bingo-marquee-chip">{{ item }}</span>
                 </template>
               </span>
-              <span class="bingo-marquee-segment" aria-hidden="true">
-                <template v-for="(item, itemIndex) in marqueeItems" :key="`marquee-b-${itemIndex}`">
-                  <span class="bingo-marquee-chip">{{ item }}</span>
-                </template>
-              </span>
+              
             </div>
           </div>
 

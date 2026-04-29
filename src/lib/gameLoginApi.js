@@ -1,10 +1,11 @@
 import bfIconPath from '../assets/icons/bf_icon.png'
+import { FALLBACK_GAME_ID, getCurrentGameId } from './gameCatalogApi'
 
 const GAME_LOGIN_URL = import.meta.env.DEV
   ? '/api/auth/game-login'
   : 'https://docking-635955947416.asia-east1.run.app/api/auth/game-login'
 
-export const GAME_LOGIN_GAME_ID = '4'
+export const GAME_LOGIN_GAME_ID = FALLBACK_GAME_ID
 export const GAME_LOGIN_SECRET_KEY =
   import.meta.env.VITE_VERIFY_PHONE_SECRET ||
   'e4b7c9f1a2d34e8b9f6a1c7d0e5f2a3b4c8d9e7f6a1b2c3d4e5f6a7b8c9d0e1f'
@@ -71,12 +72,13 @@ export async function postGameLogin(phone) {
     console.debug('[gameLoginApi] POST', GAME_LOGIN_URL)
   }
 
+  const gameId = await getCurrentGameId()
   const response = await fetch(GAME_LOGIN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(buildGameLoginPayload(phone)),
+    body: JSON.stringify(buildGameLoginPayload(phone, gameId)),
   })
 
   if (!response.ok) {
