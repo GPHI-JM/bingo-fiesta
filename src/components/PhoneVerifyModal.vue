@@ -1,13 +1,13 @@
 <template>
   <Teleport to="body">
     <div
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-3 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6"
       @click.self="emit('close')"
     >
-      <div class="fiesta-panel relative w-full max-w-sm rounded-[28px] p-6 mx-4 shadow-2xl">
-        <h2 class="fiesta-panel-title mb-1">Add Free Card</h2>
-        <p class="mb-5 text-sm text-amber-900/70 font-medium">
-          Enter your phone number to unlock a second bingo card — free of charge!
+      <div class="fiesta-panel relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[92vw] overflow-y-auto rounded-[24px] p-4 shadow-2xl sm:max-w-sm sm:rounded-[28px] sm:p-6">
+        <h2 class="fiesta-panel-title mb-1 text-xl sm:text-2xl">Add Free Card</h2>
+        <p class="mb-4 text-sm font-medium leading-snug text-amber-900/70 sm:mb-5">
+          Enter your Philippine mobile number to unlock a second bingo card free of charge.
         </p>
 
         <div class="space-y-4">
@@ -41,10 +41,10 @@
         <button
           type="button"
           @click="emit('close')"
-          class="absolute right-4 top-4 rounded-full p-1 text-amber-900/50 hover:text-amber-950 transition"
+          class="absolute right-3 top-3 rounded-full p-1 text-amber-900/50 transition hover:text-amber-950"
           aria-label="Close"
         >
-          ✕
+          x
         </button>
       </div>
     </div>
@@ -60,6 +60,21 @@ import {
   normalizePhilippineMobileNumber,
   sanitizePhilippineMobileInput,
 } from '../lib/phoneValidation'
+
+const props = defineProps({
+  gameId: {
+    type: [String, Number],
+    default: '',
+  },
+  gameIconPath: {
+    type: String,
+    default: '',
+  },
+  points: {
+    type: [String, Number],
+    default: 0,
+  },
+})
 
 const emit = defineEmits(['close', 'verified'])
 
@@ -82,14 +97,18 @@ const submitPhone = async () => {
   phoneError.value = ''
   handlePhoneInput()
   if (!isValidPhilippineMobileNumber(phoneNumber.value)) {
-    phoneError.value = 'Please enter a valid 10-digit mobile number.'
+    phoneError.value = 'Please enter a valid Philippine mobile number starting with 9.'
     return
   }
 
   isSubmitting.value = true
   try {
     const normalizedPhone = normalizePhilippineMobileNumber(phoneNumber.value)
-    await postGameLogin(normalizedPhone)
+    await postGameLogin(normalizedPhone, {
+      gameId: props.gameId,
+      gameIconPath: props.gameIconPath,
+      points: props.points,
+    })
     saveStoredPhone(normalizedPhone)
     emit('verified')
   } catch (error) {

@@ -8,13 +8,17 @@ import PhoneVerifyModal from './components/PhoneVerifyModal.vue'
 import GameIconGrid from './components/GameIconGrid.vue'
 import { useBingoStore } from './store/gameStore'
 import { buildFakeGameScores, fetchGameScores } from './lib/gameScoresApi'
+import { FALLBACK_CURRENT_GAME, CURRENT_GAME_NAME, fetchGameCatalog } from './lib/gameCatalogApi'
 
 const store = useBingoStore()
 const invalidCell = ref(null)
 const invalidCellSecond = ref(null)
 const showVerifyModal = ref(false)
+const showWinningPatternsModal = ref(false)
 const viewportWidth = ref(1600)
 const viewportHeight = ref(900)
+const currentGame = ref(FALLBACK_CURRENT_GAME)
+const otherGames = ref([])
 let phaserGame = null
 let ballTimer = null
 let resizeHandler = null
@@ -32,6 +36,33 @@ const currentBallCallout = computed(() => {
   if (!store.currentBall?.number) return ''
   return `Letter ${getBingoLetter(store.currentBall.number)}, number ${store.currentBall.number}`
 })
+
+const winningPatterns = [
+  {
+    key: 'row',
+    name: 'Horizontal line',
+    description: 'Fill any full row across the card.',
+    cells: Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, () => row === 2)),
+  },
+  {
+    key: 'col',
+    name: 'Vertical line',
+    description: 'Fill any full column top to bottom.',
+    cells: Array.from({ length: 5 }, () => Array.from({ length: 5 }, (_, col) => col === 2)),
+  },
+  {
+    key: 'diag-main',
+    name: 'Main diagonal',
+    description: 'Fill from the top-left to bottom-right.',
+    cells: Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, (_, col) => row === col)),
+  },
+  {
+    key: 'diag-cross',
+    name: 'Cross diagonal',
+    description: 'Fill from the top-right to bottom-left.',
+    cells: Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, (_, col) => row + col === 4)),
+  },
+]
 
 const onCellClick = ({ row, col, number }) => {
   if (!store.gameActive) return
@@ -116,6 +147,19 @@ async function loadMarqueeScores() {
   }
 }
 
+async function loadGameCatalog() {
+  try {
+    const catalog = await fetchGameCatalog()
+    currentGame.value = catalog.currentGame ?? FALLBACK_CURRENT_GAME
+    otherGames.value = catalog.games.filter(
+      (game) => String(game?.name ?? '').trim().toLowerCase() !== CURRENT_GAME_NAME.toLowerCase(),
+    )
+  } catch {
+    currentGame.value = FALLBACK_CURRENT_GAME
+    otherGames.value = []
+  }
+}
+
 const marqueeContainerRef = ref(null)
 let marqueePopFrameId = null
 
@@ -172,6 +216,7 @@ onMounted(() => {
   }
 
   loadMarqueeScores()
+  loadGameCatalog()
 
   store.startGame()
 
@@ -304,17 +349,27 @@ onBeforeUnmount(() => {
             <!-- Card 1 -->
             <div class="fiesta-panel rounded-[28px] p-5">
               <div class="mb-4 flex items-center justify-between gap-2">
-                <div>
+              <div>
                   <h2 class="fiesta-panel-title mb-1">Card 1</h2>
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-900/60">Your main card</p>
                 </div>
-                <button
-                  v-if="!store.hasSecondCard"
-                  @click="showVerifyModal = true"
-                  class="shrink-0 rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-700 transition hover:border-amber-500 hover:bg-amber-100"
-                >
-                  + Add Free Card
-                </button>
+                <div class="flex shrink-0 flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    @click="showWinningPatternsModal = true"
+                    class="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-800 transition hover:border-amber-500 hover:bg-amber-100"
+                  >
+                    Winning Patterns
+                  </button>
+                  <button
+                    v-if="!store.hasSecondCard"
+                    type="button"
+                    @click="showVerifyModal = true"
+                    class="shrink-0 rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-700 transition hover:border-amber-500 hover:bg-amber-100"
+                  >
+                    + Add Free Card
+                  </button>
+                </div>
               </div>
 
               <div class="rounded-[24px] border border-amber-200/70 bg-white/55 p-4">
@@ -366,17 +421,89 @@ onBeforeUnmount(() => {
             Open the other Instant Games
           </p>
         </div>
-        <GameIconGrid layout="stack" />
+        <GameIconGrid layout="stack" :games="otherGames" />
       </div>
     </div>
 
     <!-- Phone verification modal -->
     <PhoneVerifyModal
       v-if="showVerifyModal"
+      :game-id="currentGame.game_id"
+      :game-icon-path="currentGame.image_url"
+      :points="0"
       @close="showVerifyModal = false"
       @verified="onPhoneVerified"
     />
 
-    <BingoWinModal v-if="store.playerWon" :message="store.message" @play-again="startNewGame" />
+    <div
+      v-if="showWinningPatternsModal"
+      class="fixed inset-0 z-[65] flex items-start justify-center overflow-y-auto bg-black/70 px-2 py-2 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="winning-patterns-title"
+      @click.self="showWinningPatternsModal = false"
+    >
+      <div class="my-auto w-full max-w-[92vw] rounded-[22px] border border-amber-200 bg-gradient-to-b from-amber-50 via-white to-amber-100 p-3 text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.38)] sm:max-w-5xl sm:rounded-[32px] sm:p-5 md:p-6">
+        <div class="mb-3 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div class="min-w-0">
+            <p class="fiesta-kicker text-amber-700">Winning Guide</p>
+            <h2 id="winning-patterns-title" class="fiesta-panel-title mb-1 text-lg sm:text-2xl md:text-3xl">Winning Patterns</h2>
+            <p class="text-[0.72rem] font-semibold leading-snug text-amber-900/70 sm:text-sm">
+              These are the bingo lines that count as a win.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="w-full rounded-2xl border border-amber-300 bg-white px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.14em] text-amber-900 transition hover:bg-amber-100 sm:w-auto sm:px-4 sm:text-xs"
+            @click="showWinningPatternsModal = false"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
+          <div
+            v-for="pattern in winningPatterns"
+            :key="pattern.key"
+            class="rounded-[20px] border border-amber-200/90 bg-white/80 p-2.5 shadow-[0_10px_24px_rgba(120,53,15,0.06)] sm:rounded-[24px] sm:p-3.5"
+          >
+            <div class="mb-2">
+              <h3 class="text-[0.72rem] font-black uppercase tracking-[0.12em] text-amber-950 sm:text-sm">
+                {{ pattern.name }}
+              </h3>
+              <p class="mt-1 text-[0.64rem] font-semibold leading-snug text-amber-900/70 sm:text-[0.72rem]">
+                {{ pattern.description }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-5 gap-0.5 rounded-[16px] bg-amber-100/80 p-1.5 sm:gap-1.5 sm:rounded-[18px] sm:p-2">
+              <div
+                v-for="(row, rowIndex) in pattern.cells"
+                :key="`${pattern.key}-row-${rowIndex}`"
+                class="contents"
+              >
+                <span
+                  v-for="(isWinningCell, colIndex) in row"
+                  :key="`${pattern.key}-cell-${rowIndex}-${colIndex}`"
+                  class="aspect-square rounded-[0.32rem] border"
+                  :class="isWinningCell
+                    ? 'border-rose-500 bg-gradient-to-br from-rose-500 to-orange-500 shadow-[0_0_0_2px_rgba(251,113,133,0.18)]'
+                    : 'border-amber-200 bg-white/75'"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <BingoWinModal
+      v-if="store.playerWon"
+      :message="store.message"
+      :game-id="currentGame.game_id"
+      :game-icon-path="currentGame.image_url"
+      :points="store.calledBalls.length"
+      @play-again="startNewGame"
+    />
   </div>
 </template>

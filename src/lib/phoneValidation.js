@@ -1,13 +1,21 @@
 export function sanitizePhilippineMobileInput(phone) {
-  return String(phone ?? '')
-    .replace(/\D/g, '')
-    .slice(0, 10)
+  let digits = String(phone ?? '').replace(/\D/g, '')
+
+  if (digits.startsWith('63')) {
+    digits = digits.slice(2)
+  }
+
+  if (digits.startsWith('0')) {
+    digits = digits.slice(1)
+  }
+
+  return digits.slice(0, 10)
 }
 
 export function normalizePhilippineMobileNumber(phone) {
   const digits = sanitizePhilippineMobileInput(phone)
 
-  if (digits.length === 10) {
+  if (/^9\d{9}$/.test(digits)) {
     return digits
   }
 

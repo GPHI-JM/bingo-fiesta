@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div
-      class="bingo-win-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm"
+      class="bingo-win-overlay fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/65 px-3 py-3 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="bingo-win-title"
@@ -41,7 +41,7 @@
       </div>
 
       <div
-        class="fiesta-panel relative z-10 w-full max-w-md rounded-[28px] p-8 text-center shadow-2xl ring-4 ring-amber-200/80"
+        class="fiesta-panel relative z-10 my-auto w-full max-w-[92vw] rounded-[24px] p-4 text-center shadow-2xl ring-4 ring-amber-200/80 sm:max-w-md sm:rounded-[28px] sm:p-8"
         @click.stop
       >
         <p class="mb-2 text-5xl" aria-hidden="true">🎉</p>
@@ -100,6 +100,18 @@ import {
 
 const props = defineProps({
   message: { type: String, default: '' },
+  gameId: {
+    type: [String, Number],
+    default: '',
+  },
+  gameIconPath: {
+    type: String,
+    default: '',
+  },
+  points: {
+    type: [String, Number],
+    default: 0,
+  },
 })
 
 const emit = defineEmits(['play-again'])
@@ -122,14 +134,18 @@ const tryPlayAgain = async () => {
   apiError.value = ''
   handlePhoneInput()
   if (!isValidPhilippineMobileNumber(phoneNumber.value)) {
-    phoneError.value = 'Please enter a valid 10-digit mobile number.'
+    phoneError.value = 'Please enter a valid Philippine mobile number starting with 9.'
     return
   }
 
   isSubmitting.value = true
   try {
     const normalizedPhone = normalizePhilippineMobileNumber(phoneNumber.value)
-    await postGameLogin(normalizedPhone)
+    await postGameLogin(normalizedPhone, {
+      gameId: props.gameId,
+      gameIconPath: props.gameIconPath,
+      points: props.points,
+    })
     saveStoredPhone(normalizedPhone)
     emit('play-again')
   } catch (error) {

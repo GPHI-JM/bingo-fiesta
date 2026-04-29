@@ -1,21 +1,25 @@
 <template>
   <aside :class="['game-icon-grid', `game-icon-grid--${layout}`]" aria-label="More carnival games">
     <div class="game-icon-grid__inner">
-      <a
+      <component
+        :is="entry.url ? 'a' : 'div'"
         v-for="entry in gameEntries"
         :key="entry.id"
-        :href="entry.url"
-        target="_blank"
-        rel="noopener noreferrer"
+        :href="entry.url || undefined"
+        :target="entry.url ? '_blank' : undefined"
+        :rel="entry.url ? 'noopener noreferrer' : undefined"
         class="game-icon-grid__cell"
-        :class="`game-icon-grid__cell--${entry.theme}`"
-        :aria-label="`Open ${entry.alt}`"
+        :class="[
+          `game-icon-grid__cell--${entry.theme}`,
+          !entry.url ? 'game-icon-grid__cell--disabled' : '',
+        ]"
+        :aria-label="entry.url ? `Open ${entry.alt}` : `${entry.alt} unavailable`"
       >
         <span class="game-icon-grid__thumb">
           <span class="game-icon-grid__hot" aria-hidden="true">HOT</span>
 
           <img
-            v-if="!imageFailed[entry.src]"
+            v-if="entry.src && !imageFailed[entry.src]"
             :src="entry.src"
             :alt="entry.alt"
             class="game-icon-grid__img"
@@ -25,56 +29,60 @@
           <span v-else class="game-icon-grid__emoji-fallback" aria-hidden="true">{{ entry.fallback }}</span>
         </span>
         <!-- <span class="game-icon-grid__caption">{{ entry.alt }}</span> -->
-      </a>
+      </component>
     </div>
   </aside>
 </template>
 
 <script setup>
 import { computed, reactive } from 'vue'
-import nfIcon from '../assets/icons/nf_icon.png'
-import phIcon from '../assets/icons/ph_icon.png'
-import tekhenIcon from '../assets/icons/tekhen_icon.png'
 
 const props = defineProps({
   layout: {
     type: String,
     default: 'stack',
   },
+  games: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const imageFailed = reactive({})
 const layout = computed(() => (props.layout === 'compact' ? 'compact' : 'stack'))
 
-const gameEntries = [
-  {
-    id: 'nf',
-    src: nfIcon,
-    alt: 'nf_icon',
-    url: 'https://fb.gg/play/1431508008453701',
-    fallback: 'NF',
-    theme: 'green',
-  },
-  {
-    id: 'ph',
-    src: phIcon,
-    alt: 'ph_icon',
-    url: 'https://fb.gg/play/4166337263499439',
-    fallback: 'PH',
-    theme: 'yellow',
-  },
-  {
-    id: 'tekhen',
-    src: tekhenIcon,
-    alt: 'tekhen_icon',
-    url: 'https://fb.gg/play/2136783867072234',
-    fallback: 'TK',
-    theme: 'purple',
-  },
-]
+const themeCycle = ['green', 'yellow', 'purple', 'cyan']
+
+const gameEntries = computed(() =>
+  props.games.map((game, index) => ({
+    id: String(game?.game_id ?? game?.id ?? index),
+    src: String(game?.image_url ?? ''),
+    alt: String(game?.name ?? game?.slug ?? 'Game'),
+    url: String(game?.game_url ?? ''),
+    fallback: buildFallbackLabel(game?.name ?? game?.slug ?? 'Game'),
+    theme: themeCycle[index % themeCycle.length],
+  })),
+)
 
 function markImageFailed(src) {
   imageFailed[src] = true
+}
+
+function buildFallbackLabel(name) {
+  const parts = String(name ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (parts.length === 0) {
+    return 'GM'
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+    .slice(0, 2)
 }
 </script>
 
@@ -119,6 +127,12 @@ function markImageFailed(src) {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
+}
+
+.game-icon-grid__cell--disabled {
+  cursor: default;
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 .game-icon-grid__cell:focus-visible {
